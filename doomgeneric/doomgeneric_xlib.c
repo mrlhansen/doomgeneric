@@ -206,7 +206,7 @@ int main(int argc, char **argv)
 
     while(1)
     {
-      doomgeneric_Tick(); 
+      doomgeneric_Tick();
     }
 
     return 0;

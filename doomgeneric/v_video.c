@@ -21,7 +21,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+//#include <math.h>
 
 #include "i_system.h"
 
@@ -58,6 +58,11 @@ byte *xlatab = NULL;
 static byte *dest_screen = NULL;
 
 int dirtybox[4]; 
+
+static double fabs(double h)
+{
+    return h < 0 ? -h : h;
+}
 
 // haleyjd 08/28/10: clipping callback function for patches.
 // This is needed for Chocolate Strife, which clips patches to the screen.

@@ -32,8 +32,9 @@
 #include <direct.h>
 #endif
 #else
-#include <sys/stat.h>
-#include <sys/types.h>
+//#include <sys/stat.h>
+//#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 #include "doomtype.h"
