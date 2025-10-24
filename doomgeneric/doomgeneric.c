@@ -1,6 +1,6 @@
-#include <novino/termio.h>
-#include <_syscall.h>
-#include <stdio.h>
+#include <novino/syscalls.h>
+#include <_stdio.h>
+#include <unistd.h>
 
 #include "m_argv.h"
 #include "doomkeys.h"
@@ -10,10 +10,6 @@ pixel_t* DG_ScreenBuffer = NULL;
 
 void M_FindResponseFile(void);
 void D_DoomMain (void);
-
-static uint8_t *fb;
-static uint64_t ts;
-static int kb;
 
 typedef struct {
     uint64_t tv_sec;
@@ -27,14 +23,30 @@ typedef struct {
     uint32_t value;
 } input_event_t;
 
+typedef struct  {
+    uintptr_t addr;
+    int width;
+    int height;
+    int pitch;
+    int bpp;
+} fbmem_t;
+
+static fbmem_t fbmem;
+static uint8_t *fb;
+static uint64_t ts;
+static int kb;
+
 void DG_Init()
 {
     timeval_t tv;
-    uint64_t virt;
 
-    virt = syscall(27, 0, 0, 0, 0, 0);
-    fb = (void*)virt;
-    tiosetflags(TIONOBUF | TIONOSCRL);
+    FILE *fp = fopen("/devices/vts5", "r");
+    if(fp == NULL)
+    {
+        perror("failed to open vts5");
+    }
+    ioctl(fp->fd, 0x51646e, &fbmem);
+    fb = (void*)fbmem.addr;
 
     sys_gettime(&tv);
     ts = tv.tv_sec * 1000 + tv.tv_nsec / 1000000;
@@ -48,13 +60,13 @@ void DG_Init()
 
 void DG_DrawFrame()
 {
-    int bytes_per_line = 800*4;
-//   int bytes_per_line = 1920*4;
-    int doom_bytes_per_line = 4 * DOOMGENERIC_RESX;
+    int dpitch = 4 * DOOMGENERIC_RESX;
+    int start = (fbmem.height - DOOMGENERIC_RESY) / 2;
+    int startx = (fbmem.width - DOOMGENERIC_RESX) * 2;
 
     for(int i = 0; i < DOOMGENERIC_RESY; i++)
     {
-        memcpy(fb + i * bytes_per_line, DG_ScreenBuffer + i * DOOMGENERIC_RESX, doom_bytes_per_line);
+        memcpy(fb + (i + start) * fbmem.pitch + startx, DG_ScreenBuffer + i * DOOMGENERIC_RESX, dpitch);
     }
 }
 
